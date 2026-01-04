@@ -47,7 +47,7 @@ export const ProjectVision = {
       order: 5,
       title: "Streamlit Audit UI",
       description: "User interface for viewing decisions, traces, and audit logs",
-      status: "planned"
+      status: "completed"
     },
     {
       id: "P6",
