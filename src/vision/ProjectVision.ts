@@ -1,7 +1,8 @@
 /**
  * Project Vision - Single Source of Truth for Project Phases and Progress
- * 
- * This file tracks all project phases, their status, and associated deliverables.
+ *
+ * This file tracks all project phases, their intent, and delivery status.
+ * It is authoritative and must not be reinterpreted by implementation code.
  */
 
 export const ProjectVision = {
@@ -39,23 +40,62 @@ export const ProjectVision = {
       id: "P4",
       order: 4,
       title: "FastAPI Decision API",
-      description: "RESTful API for decision requests and audit queries",
+      description: "Internal API for submitting decisions and retrieving execution results",
       status: "completed"
     },
     {
       id: "P5",
       order: 5,
       title: "Streamlit Audit UI",
-      description: "User interface for viewing decisions, traces, and audit logs",
+      description: "User interface for viewing decisions, traces, and execution timelines",
       status: "completed"
     },
     {
       id: "P6",
       order: 6,
       title: "Documentation, Limits & Audit Narrative",
-      description: "Comprehensive documentation, system limits, and audit narrative generation",
+      description: "System documentation, explicit limitations, and post-hoc audit narrative generation",
+      deliverables: [
+        "SYSTEM_OVERVIEW.md",
+        "LIMITATIONS.md",
+        "AUDIT_NARRATIVE_TEMPLATE.md"
+      ],
+      status: "completed"
+    },
+    {
+      id: "P7",
+      order: 7,
+      title: "Persistent Audit Log",
+      description: "Durable storage of decision traces using SQLite or JSONL",
+      status: "planned"
+    },
+    {
+      id: "P8",
+      order: 8,
+      title: "Decision Replay Engine",
+      description: "Ability to replay a past decision using stored inputs and trace data",
+      status: "planned"
+    },
+    {
+      id: "P9",
+      order: 9,
+      title: "Audit Query API Surface",
+      description: "Read-only FastAPI endpoints for querying decisions and audit trails",
+      status: "planned"
+    },
+    {
+      id: "P10",
+      order: 10,
+      title: "Governance README & Architecture Diagrams",
+      description: "High-level governance documentation and system architecture diagrams",
+      status: "planned"
+    },
+    {
+      id: "P11",
+      order: 11,
+      title: "Hardening & Evaluation Hooks",
+      description: "Evaluation points, metrics hooks, and non-functional hardening",
       status: "planned"
     }
   ]
 };
-
