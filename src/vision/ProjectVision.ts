@@ -19,7 +19,7 @@ export const ProjectVision = {
       order: 1,
       title: "Decision & Trace Model",
       description: "Core data models for decisions, traces, and audit records",
-      status: "planned"
+      status: "completed"
     },
     {
       id: "P2",
