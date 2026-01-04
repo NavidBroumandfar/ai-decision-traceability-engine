@@ -40,7 +40,7 @@ export const ProjectVision = {
       order: 4,
       title: "FastAPI Decision API",
       description: "RESTful API for decision requests and audit queries",
-      status: "planned"
+      status: "completed"
     },
     {
       id: "P5",

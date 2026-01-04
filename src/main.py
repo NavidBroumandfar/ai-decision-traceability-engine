@@ -2,10 +2,14 @@
 AI Decision Traceability Engine - Main Entry Point
 """
 
+import uvicorn
+
+from src.api.app import app
+
 
 def main():
-    """Initialize the AI Decision Traceability Engine."""
-    print("AI Decision Traceability Engine — initialized")
+    """Run the FastAPI application."""
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":
