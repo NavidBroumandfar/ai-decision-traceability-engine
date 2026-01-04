@@ -1,5 +1,53 @@
 # AI Decision Traceability & Audit Engine
 
+## Setup
+
+### Prerequisites
+
+- Python 3.10 or higher
+- pip
+
+### Environment Setup
+
+This project uses a local virtual environment to ensure reproducible execution across different Python installations.
+
+1. **Create the virtual environment:**
+   ```bash
+   python3 -m venv .venv
+   ```
+
+2. **Activate the virtual environment:**
+   ```bash
+   source .venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -e .
+   ```
+
+### Running the Application
+
+**Streamlit Audit UI:**
+```bash
+source .venv/bin/activate
+python -m streamlit run src/ui/app.py
+```
+
+**FastAPI Server:**
+```bash
+source .venv/bin/activate
+python src/main.py
+```
+
+Or using uvicorn directly:
+```bash
+source .venv/bin/activate
+uvicorn src.api.app:app
+```
+
+**Note:** Always ensure the virtual environment is activated before running any commands.
+
 ## Problem Statement
 
 Modern AI systems, particularly agentic AI applications, make decisions that impact business outcomes, regulatory compliance, and user trust. However, these systems often operate as "black boxes" with limited visibility into how decisions are made, what factors influenced them, and whether they align with organizational policies and constraints. This lack of traceability creates significant risks in enterprise environments where decisions must be auditable, explainable, and governed.
