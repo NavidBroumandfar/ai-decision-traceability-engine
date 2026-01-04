@@ -33,7 +33,7 @@ export const ProjectVision = {
       order: 3,
       title: "Deterministic Orchestration & Guards",
       description: "Deterministic orchestration logic and guardrail enforcement",
-      status: "planned"
+      status: "completed"
     },
     {
       id: "P4",
