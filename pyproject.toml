@@ -1,0 +1,19 @@
+[project]
+name = "ai-decision-traceability-engine"
+version = "0.1.0"
+description = "Governed AI decision system with full traceability and auditability"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "streamlit>=1.28.0",
+    "langgraph>=0.0.20",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
