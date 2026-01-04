@@ -26,7 +26,7 @@ export const ProjectVision = {
       order: 2,
       title: "Agent Graph (LangGraph)",
       description: "LangGraph-based agent orchestration and decision workflows",
-      status: "planned"
+      status: "completed"
     },
     {
       id: "P3",

@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     )
 
     openai_base_url: str = ""
+    openai_api_key: str = ""
     openai_model: str = ""
     log_level: str = "INFO"
 
