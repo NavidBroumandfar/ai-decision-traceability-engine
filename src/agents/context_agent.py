@@ -24,9 +24,28 @@ def run_context_agent(input_payload: dict[str, Any]) -> ContextAgentOutput:
     Returns:
         ContextAgentOutput with facts, assumptions, and missing fields
     """
+    if not settings.openai_model:
+        raise ValueError(
+            "Model is not configured. Please set OPENAI_MODEL in your .env file."
+        )
+    
+    # For local models, API key is often optional but OpenAI client requires it
+    # If base_url is set (local model), use a dummy key
+    # Otherwise, require API key for OpenAI API
+    api_key = settings.openai_api_key.strip() if settings.openai_api_key else ""
+    if not api_key and not settings.openai_base_url:
+        raise ValueError(
+            "API key is required when using OpenAI API. Please set OPENAI_API_KEY in your .env file, "
+            "or set OPENAI_BASE_URL to use a local model server (e.g., http://localhost:11434/v1 for Ollama)."
+        )
+    
+    # For local models, use a dummy key (OpenAI client requires api_key parameter)
+    # For OpenAI API, use the actual API key
+    final_api_key = api_key if api_key else "ollama"  # Dummy key for local models
+    
     client = OpenAI(
-        base_url=settings.openai_base_url or None,
-        api_key=settings.openai_api_key or "not-needed"
+        base_url=settings.openai_base_url.strip() if settings.openai_base_url else None,
+        api_key=final_api_key
     )
     
     prompt = f"""You are a Context Agent. Your role is to analyze input data and extract structured information.

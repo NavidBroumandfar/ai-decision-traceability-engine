@@ -26,6 +26,38 @@ This project uses a local virtual environment to ensure reproducible execution a
    pip install -e .
    ```
 
+4. **Configure environment variables:**
+   
+   Create a `.env` file in the project root (a template has been created for you):
+   
+   **For Local Models (Ollama, LM Studio, etc.):**
+   ```bash
+   # Local Model Configuration
+   OPENAI_BASE_URL=http://localhost:11434/v1  # Ollama default
+   # OPENAI_BASE_URL=http://localhost:1234/v1  # LM Studio default
+   OPENAI_API_KEY=  # Leave empty for local models
+   OPENAI_MODEL=llama3.2  # Your local model name
+   
+   # Logging
+   LOG_LEVEL=INFO
+   ```
+   
+   **For OpenAI API:**
+   ```bash
+   # OpenAI API Configuration
+   OPENAI_BASE_URL=
+   OPENAI_API_KEY=sk-your-api-key-here
+   OPENAI_MODEL=gpt-4o-mini
+   
+   # Logging
+   LOG_LEVEL=INFO
+   ```
+   
+   **Local Model Setup:**
+   - **Ollama**: Install from [ollama.ai](https://ollama.ai), then run `ollama serve` and pull a model (e.g., `ollama pull llama3.2`)
+   - **LM Studio**: Install from [lmstudio.ai](https://lmstudio.ai), start the local server, and use port 1234
+   - The system uses OpenAI-compatible API, so any local server supporting that format will work
+
 ### Running the Application
 
 **Streamlit Audit UI:**
