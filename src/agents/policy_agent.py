@@ -29,8 +29,8 @@ def run_policy_agent(
         PolicyAgentOutput with applicable rules, explanations, and ambiguities
     """
     client = OpenAI(
-        base_url=settings.openai_base_url or None,
-        api_key=settings.openai_api_key or "not-needed"
+        base_url="http://localhost:1234/v1",
+        api_key="local-only"
     )
     
     prompt = f"""You are a Policy Interpretation Agent. Your role is to interpret policy rules in the context of extracted facts.

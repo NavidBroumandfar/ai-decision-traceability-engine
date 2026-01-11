@@ -29,8 +29,8 @@ def run_recommendation_agent(
         RecommendationAgentOutput with recommendation, justification, confidence, and risks
     """
     client = OpenAI(
-        base_url=settings.openai_base_url or None,
-        api_key=settings.openai_api_key or "not-needed"
+        base_url="http://localhost:1234/v1",
+        api_key="local-only"
     )
     
     prompt = f"""You are a Recommendation Agent. Your role is to propose a recommendation based on context and policy interpretation.

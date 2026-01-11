@@ -21,13 +21,17 @@ import streamlit as st
 
 from src.core.decision_models import DecisionRequest, DecisionResult
 from src.orchestration.orchestrator import DecisionOrchestrator
+from src.tracing.persistence import get_trace_events_by_run_id
 from src.tracing.trace_models import TraceEvent
 from src.ui.components import render_decision_result, render_trace_event
 
 
 def load_trace_events(run_id: str) -> list[TraceEvent]:
     """
-    Load trace events for a given run_id from the trace file.
+    Load trace events for a given run_id from JSONL file or SQLite database.
+    
+    First attempts to load from JSONL file (for backward compatibility).
+    If JSONL file doesn't exist, loads from SQLite database.
     
     Args:
         run_id: The run_id to load traces for
@@ -35,31 +39,38 @@ def load_trace_events(run_id: str) -> list[TraceEvent]:
     Returns:
         List of TraceEvent objects, sorted by timestamp
     """
+    # First try to load from JSONL file (if it exists)
     trace_file = Path("data/traces") / f"{run_id}.jsonl"
     
-    if not trace_file.exists():
+    if trace_file.exists():
+        events = []
+        with open(trace_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    event_dict = json.loads(line)
+                    # Convert timestamp string back to datetime
+                    event_dict["timestamp"] = datetime.fromisoformat(event_dict["timestamp"])
+                    event = TraceEvent(**event_dict)
+                    events.append(event)
+                except (json.JSONDecodeError, ValueError, KeyError) as e:
+                    # Skip malformed lines but continue processing
+                    st.warning(f"Skipping malformed trace event: {e}")
+                    continue
+        
+        # Sort by timestamp
+        events.sort(key=lambda e: e.timestamp)
+        return events
+    
+    # If JSONL doesn't exist, try loading from SQLite
+    try:
+        events = get_trace_events_by_run_id(run_id)
+        return events
+    except Exception as e:
+        st.warning(f"Failed to load traces from database: {e}")
         return []
-    
-    events = []
-    with open(trace_file, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                event_dict = json.loads(line)
-                # Convert timestamp string back to datetime
-                event_dict["timestamp"] = datetime.fromisoformat(event_dict["timestamp"])
-                event = TraceEvent(**event_dict)
-                events.append(event)
-            except (json.JSONDecodeError, ValueError, KeyError) as e:
-                # Skip malformed lines but continue processing
-                st.warning(f"Skipping malformed trace event: {e}")
-                continue
-    
-    # Sort by timestamp
-    events.sort(key=lambda e: e.timestamp)
-    return events
 
 
 # Initialize orchestrator with empty policy text

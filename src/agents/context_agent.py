@@ -25,8 +25,8 @@ def run_context_agent(input_payload: dict[str, Any]) -> ContextAgentOutput:
         ContextAgentOutput with facts, assumptions, and missing fields
     """
     client = OpenAI(
-        base_url=settings.openai_base_url or None,
-        api_key=settings.openai_api_key or "not-needed"
+        base_url="http://localhost:1234/v1",
+        api_key="local-only"
     )
     
     prompt = f"""You are a Context Agent. Your role is to analyze input data and extract structured information.
