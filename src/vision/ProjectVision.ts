@@ -66,8 +66,13 @@ export const ProjectVision = {
       id: "P7",
       order: 7,
       title: "Persistent Audit Log",
-      description: "Durable storage of decision traces using SQLite or JSONL",
-      status: "planned"
+      description: "Durable storage of decision traces (JSONL) and decision results (JSON)",
+      deliverables: [
+        "data/traces/{run_id}.jsonl",
+        "data/decisions/{run_id}.json",
+        "src/persistence/decision_store.py"
+      ],
+      status: "completed"
     },
     {
       id: "P8",

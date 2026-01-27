@@ -11,12 +11,12 @@ from typing import Dict
 
 from src.core.decision_models import DecisionRequest, DecisionResult
 from src.orchestration.orchestrator import DecisionOrchestrator
+from src.persistence.decision_store import FileDecisionStore
 
 router = APIRouter(prefix="/decision", tags=["decision"])
 
-# In-memory store for decision results (minimal, no persistence)
-# This is a temporary solution for basic metadata retrieval
-_decision_store: Dict[str, DecisionResult] = {}
+# File-based store for decision results (persistent)
+_decision_store = FileDecisionStore()
 
 # Initialize orchestrator with default policy text
 # In a production system, this would come from configuration
@@ -39,8 +39,8 @@ async def run_decision(request: DecisionRequest) -> DecisionResult:
     """
     try:
         result = _orchestrator.run_decision(request)
-        # Store result for basic metadata retrieval
-        _decision_store[result.run_id] = result
+        # Persist result to disk
+        _decision_store.save(result)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -64,10 +64,10 @@ async def get_decision_metadata(run_id: str) -> Dict:
     Raises:
         HTTPException: 404 if the decision run is not found
     """
-    if run_id not in _decision_store:
+    result = _decision_store.load(run_id)
+    if result is None:
         raise HTTPException(status_code=404, detail=f"Decision run {run_id} not found")
     
-    result = _decision_store[run_id]
     return {
         "run_id": result.run_id,
         "final_decision": result.final_decision,
