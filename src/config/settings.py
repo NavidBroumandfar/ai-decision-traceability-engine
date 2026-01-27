@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = ""
     log_level: str = "INFO"
+    max_request_size: int = 1024 * 1024  # Default 1MB
 
 
 # Global settings instance

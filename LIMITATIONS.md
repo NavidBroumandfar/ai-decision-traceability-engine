@@ -5,14 +5,14 @@ This document explicitly states what the system does NOT do, known limitations, 
 ## Explicit Non-Goals
 
 ### 1. Persistent Decision Storage
-**The system does NOT provide durable storage of decision results.**
+**✅ COMPLETED in Phase 7**
 
-- Decision results are stored in-memory only (`_decision_store` dictionary in `routes.py`)
-- Results are lost on server restart
-- No database integration
-- No query capabilities for historical decisions
+- Decision results are now stored persistently in `data/decisions/{run_id}.json`
+- Results survive server restarts
+- File-based storage with atomic writes
+- Trace events stored in `data/traces/{run_id}.jsonl`
 
-**Rationale**: Persistent storage is planned for Phase 7 (Persistent Audit Log).
+**Note**: While storage is persistent, query capabilities are still limited (see Audit Query API below).
 
 ### 2. Decision Replay
 **The system does NOT support replaying past decisions.**
@@ -75,16 +75,16 @@ This document explicitly states what the system does NOT do, known limitations, 
 
 ## Known System Limitations
 
-### 1. In-Memory Result Storage
-**Current State**: Decision results are stored in a Python dictionary in memory.
+### 1. File-Based Result Storage
+**Current State**: Decision results are stored in JSON files at `data/decisions/{run_id}.json`.
 
 **Limitations**:
-- Results are lost on server restart
-- No persistence across deployments
-- Memory usage grows unbounded (no eviction policy)
-- Not suitable for production workloads
+- No indexing or querying capabilities (files must be read individually)
+- No automatic cleanup or archival
+- No compression
+- Not suitable for high-volume production workloads without additional infrastructure
 
-**Impact**: Cannot retrieve decision results after server restart.
+**Impact**: Results persist across restarts, but querying requires reading individual files.
 
 ### 2. Trace File Management
 **Current State**: Trace events are written to `data/traces/{run_id}.jsonl` files.

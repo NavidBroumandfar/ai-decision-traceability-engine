@@ -190,10 +190,10 @@ The recommendation agent produces a `recommendation` field, but this is a propos
 
 ## Current Limitations
 
-- No persistent storage of decision results (results are stored in-memory only)
+- ✅ **Persistent storage implemented (P7)**: Decision results and trace files are stored on disk
 - Trace files are written to disk but not indexed for querying
-- No replay capability for past decisions
-- No audit query API endpoints
+- No replay capability for past decisions (planned for P8)
+- No audit query API endpoints (planned for P9)
 
 See `LIMITATIONS.md` for a complete list of system limitations and non-goals.
 
