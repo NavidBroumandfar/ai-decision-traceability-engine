@@ -12,6 +12,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Exception: src/lib/ is our source code, not a Python lib directory
+!src/lib/
 parts/
 sdist/
 var/

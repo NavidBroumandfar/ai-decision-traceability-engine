@@ -48,17 +48,29 @@ class Settings(BaseSettings):
         default=LLMProvider.OLLAMA,
         description="LLM provider: 'openai', 'ollama', or 'lmstudio'"
     )
-    openai_base_url: str = Field(
-        default="",
-        description="Base URL for LLM API (empty for OpenAI, set for local models)"
+    
+    # Configuration for local providers (ollama/lmstudio)
+    llm_model: str | None = Field(
+        default=None,
+        description="Model name for local providers (e.g., 'qwen2.5-coder:7b-instruct', 'llama3.2')"
     )
-    openai_api_key: str = Field(
-        default="",
-        description="API key for LLM provider (required in prod for OpenAI)"
+    llm_base_url: str | None = Field(
+        default=None,
+        description="Base URL for local LLM server (e.g., 'http://localhost:11434/v1' for Ollama)"
     )
-    openai_model: str = Field(
-        default="",
-        description="Model name/identifier (e.g., 'llama3.2', 'gpt-4o-mini')"
+    
+    # Configuration for OpenAI provider
+    openai_api_key: str | None = Field(
+        default=None,
+        description="API key for OpenAI API (required when LLM_PROVIDER=openai)"
+    )
+    openai_model: str | None = Field(
+        default=None,
+        description="Model name for OpenAI API (e.g., 'gpt-4o-mini')"
+    )
+    openai_base_url: str | None = Field(
+        default=None,
+        description="Base URL for OpenAI API (default: https://api.openai.com/v1)"
     )
 
     # Application configuration
@@ -67,7 +79,7 @@ class Settings(BaseSettings):
         description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
     )
     max_request_size: int = Field(
-        default=1024 * 1024,  # 1MB
+        default=1048576,  # 1MB
         description="Maximum request body size in bytes"
     )
 
@@ -103,32 +115,110 @@ class Settings(BaseSettings):
         errors = []
 
         if self.env == "prod":
-            # In production, OPENAI_API_KEY is required for OpenAI provider
             if self.llm_provider == LLMProvider.OPENAI:
+                # OpenAI provider requires API key and model
                 if not self.openai_api_key or not self.openai_api_key.strip():
                     errors.append(
-                        "OPENAI_API_KEY is required in production when LLM_PROVIDER=openai"
+                        "OPENAI_API_KEY is required when LLM_PROVIDER=openai"
+                    )
+                if not self.openai_model or not self.openai_model.strip():
+                    errors.append(
+                        "OPENAI_MODEL is required when LLM_PROVIDER=openai"
+                    )
+            elif self.llm_provider in (LLMProvider.OLLAMA, LLMProvider.LMSTUDIO):
+                # Local providers require model and base_url
+                if not self.llm_model or not self.llm_model.strip():
+                    errors.append(
+                        f"LLM_MODEL is required when LLM_PROVIDER={self.llm_provider.value}"
+                    )
+                if not self.llm_base_url or not self.llm_base_url.strip():
+                    errors.append(
+                        f"LLM_BASE_URL is required when LLM_PROVIDER={self.llm_provider.value}"
                     )
 
-            # Model name is always required
-            if not self.openai_model or not self.openai_model.strip():
-                errors.append("OPENAI_MODEL is required")
-
         return errors
+    
+    def validate_local_config(self) -> list[str]:
+        """
+        Validate configuration for local environment.
+        
+        Returns:
+            List of validation warning messages (empty if valid)
+        """
+        warnings = []
+
+        if self.env == "local":
+            if self.llm_provider == LLMProvider.OPENAI:
+                # In local, still require API key for OpenAI to avoid confusion
+                if not self.openai_api_key or not self.openai_api_key.strip():
+                    warnings.append(
+                        "OPENAI_API_KEY is required when LLM_PROVIDER=openai (even in local mode)"
+                    )
+                if not self.openai_model or not self.openai_model.strip():
+                    warnings.append(
+                        "OPENAI_MODEL is recommended when LLM_PROVIDER=openai"
+                    )
+            elif self.llm_provider in (LLMProvider.OLLAMA, LLMProvider.LMSTUDIO):
+                # Warn if model or base_url missing, but don't fail
+                if not self.llm_model or not self.llm_model.strip():
+                    warnings.append(
+                        f"LLM_MODEL is recommended when LLM_PROVIDER={self.llm_provider.value}"
+                    )
+                if not self.llm_base_url or not self.llm_base_url.strip():
+                    warnings.append(
+                        f"LLM_BASE_URL is recommended when LLM_PROVIDER={self.llm_provider.value} "
+                        f"(will use default: {self.get_effective_base_url()})"
+                    )
+
+        return warnings
 
     def get_effective_base_url(self) -> str | None:
         """
         Get the effective base URL based on provider.
         
+        Supports backward compatibility: if LLM_BASE_URL is not set for local providers,
+        falls back to OPENAI_BASE_URL for migration purposes.
+        
         Returns:
             Base URL string or None for OpenAI API
         """
         if self.llm_provider == LLMProvider.OPENAI:
-            return None  # OpenAI uses default base URL
+            return self.openai_base_url.strip() if self.openai_base_url and self.openai_base_url.strip() else "https://api.openai.com/v1"
         elif self.llm_provider == LLMProvider.OLLAMA:
-            return self.openai_base_url.strip() if self.openai_base_url else "http://localhost:11434/v1"
+            # Try LLM_BASE_URL first, fall back to OPENAI_BASE_URL for backward compatibility
+            if self.llm_base_url and self.llm_base_url.strip():
+                return self.llm_base_url.strip()
+            elif self.openai_base_url and self.openai_base_url.strip():
+                return self.openai_base_url.strip()
+            return "http://localhost:11434/v1"
         elif self.llm_provider == LLMProvider.LMSTUDIO:
-            return self.openai_base_url.strip() if self.openai_base_url else "http://localhost:1234/v1"
+            # Try LLM_BASE_URL first, fall back to OPENAI_BASE_URL for backward compatibility
+            if self.llm_base_url and self.llm_base_url.strip():
+                return self.llm_base_url.strip()
+            elif self.openai_base_url and self.openai_base_url.strip():
+                return self.openai_base_url.strip()
+            return "http://localhost:1234/v1"
+        return None
+    
+    def get_effective_model(self) -> str | None:
+        """
+        Get the effective model name based on provider.
+        
+        Supports backward compatibility: if LLM_MODEL is not set for local providers,
+        falls back to OPENAI_MODEL for migration purposes.
+        
+        Returns:
+            Model name string or None if not configured
+        """
+        if self.llm_provider == LLMProvider.OPENAI:
+            return self.openai_model.strip() if self.openai_model and self.openai_model.strip() else None
+        elif self.llm_provider in (LLMProvider.OLLAMA, LLMProvider.LMSTUDIO):
+            # Try LLM_MODEL first, fall back to OPENAI_MODEL for backward compatibility
+            if self.llm_model and self.llm_model.strip():
+                return self.llm_model.strip()
+            elif self.openai_model and self.openai_model.strip():
+                return self.openai_model.strip()
+            return None
         return None
 
 
