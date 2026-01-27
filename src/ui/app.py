@@ -156,8 +156,29 @@ if run_button:
             st.session_state["last_run_id"] = result.run_id
             
         except Exception as e:
-            st.error(f"Decision execution failed: {str(e)}")
-            st.exception(e)
+            error_msg = str(e)
+            st.error(f"Decision execution failed: {error_msg}")
+            
+            # Show connection error help if it's a connection issue
+            if "Connection error" in error_msg or "APIConnectionError" in str(type(e).__name__):
+                with st.expander("🔧 How to Fix Connection Errors", expanded=True):
+                    st.markdown("""
+                    **Your LLM server is not running. Choose one of these options:**
+                    
+                    1. **Start Ollama** (if using local models):
+                       - Open a terminal and run: `ollama serve`
+                       - Make sure the model is downloaded: `ollama pull qwen2.5-coder:7b-instruct`
+                    
+                    2. **Use OpenAI API** (if you have an API key):
+                       - Update your `.env` file with your `OPENAI_API_KEY`
+                       - Set `OPENAI_BASE_URL=` (empty)
+                    
+                    3. **See SETUP_LLM.md** for detailed instructions
+                    """)
+            
+            # Show full traceback in expander for debugging
+            with st.expander("📋 Full Error Details (for debugging)"):
+                st.exception(e)
 
 
 # ============================================================================

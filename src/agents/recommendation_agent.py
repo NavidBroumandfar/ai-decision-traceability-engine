@@ -8,7 +8,7 @@ and does NOT make final decisions.
 
 import json
 
-from openai import OpenAI
+from openai import APIConnectionError, OpenAI
 
 from src.agents.agent_models import ContextAgentOutput, PolicyAgentOutput, RecommendationAgentOutput
 from src.config.settings import settings
@@ -95,15 +95,34 @@ Return a JSON object with the following structure:
 
 Return ONLY valid JSON, no additional text."""
 
-    response = client.chat.completions.create(
-        model=settings.openai_model,
-        messages=[
-            {"role": "system", "content": "You are a Recommendation Agent. Propose recommendations with justification. Never make final decisions or enforce rules."},
-            {"role": "user", "content": prompt}
-        ],
-        response_format={"type": "json_object"},
-        temperature=0.0
-    )
+    try:
+        response = client.chat.completions.create(
+            model=settings.openai_model,
+            messages=[
+                {"role": "system", "content": "You are a Recommendation Agent. Propose recommendations with justification. Never make final decisions or enforce rules."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.0
+        )
+    except APIConnectionError as e:
+        base_url = settings.openai_base_url or "OpenAI API"
+        error_msg = (
+            f"Connection error: Cannot connect to {base_url}.\n"
+        )
+        if settings.openai_base_url:
+            error_msg += (
+                f"  - Make sure your local model server is running.\n"
+                f"  - For Ollama: Run 'ollama serve' in a terminal.\n"
+                f"  - For LM Studio: Start the local server in the application.\n"
+                f"  - Verify the server is accessible at: {settings.openai_base_url}\n"
+            )
+        else:
+            error_msg += (
+                f"  - Check your internet connection.\n"
+                f"  - Verify your OPENAI_API_KEY is correct in the .env file.\n"
+            )
+        raise ConnectionError(error_msg) from e
     
     result_text = response.choices[0].message.content
     result_dict = json.loads(result_text)
