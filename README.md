@@ -91,6 +91,17 @@ The AI Decision Traceability & Audit Engine addresses this critical gap by provi
 - This is **NOT** autonomous AI. All decisions are made within a governed framework with explicit orchestration and guardrails.
 - The primary focus is on **decision traceability, governance, and auditability** for enterprise AI applications.
 
+## Production Contract
+
+This system is production-credible but not enterprise-grade. It provides deterministic orchestration, full traceability, and persistent storage suitable for single-node deployments. It does not provide distributed coordination, high availability, automatic failover, or multi-tenant isolation. For detailed guarantees, limitations, and operational assumptions, see [PRODUCTION_CONTRACT.md](PRODUCTION_CONTRACT.md).
+
+**Key Points:**
+- Deterministic rule evaluation and confidence calculation
+- Atomic persistence of decision results and trace events
+- Single-node deployment assumption
+- LLM agent outputs are non-deterministic (even with temperature=0)
+- No automatic backups or replication
+
 ## Project Phases (Tracked in ProjectVision.ts)
 
 Project phases and progress are tracked in `src/vision/ProjectVision.ts`. This file serves as the single source of truth for project status and roadmap.
