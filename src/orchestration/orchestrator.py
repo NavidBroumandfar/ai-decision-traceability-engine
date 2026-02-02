@@ -41,12 +41,12 @@ class DecisionOrchestrator:
         self.policy_text = policy_text
         self.agent_graph = build_agent_graph()
     
-    def run_decision(self, request: DecisionRequest) -> DecisionResult:
+    def run_decision(self, request: DecisionRequest, run_id_override: str | None = None) -> DecisionResult:
         """
         Execute a decision request through the agent graph and produce a result.
         
         This method:
-        1. Generates a run_id
+        1. Generates a run_id (or uses override if provided)
         2. Executes the agent graph
         3. Collects agent outputs
         4. Applies deterministic rules
@@ -56,6 +56,8 @@ class DecisionOrchestrator:
         
         Args:
             request: The decision request to process
+            run_id_override: Optional run_id to use instead of generating a new one
+                            (useful for replay scenarios)
             
         Returns:
             DecisionResult with final decision, confidence, and reason codes
@@ -64,8 +66,8 @@ class DecisionOrchestrator:
             ValueError: If agent outputs violate expected schemas
             RuntimeError: If graph execution fails
         """
-        # Generate unique run_id
-        run_id = str(uuid.uuid4())
+        # Generate unique run_id or use override
+        run_id = run_id_override if run_id_override is not None else str(uuid.uuid4())
         
         # Emit input_received trace event
         input_event = TraceEvent(
