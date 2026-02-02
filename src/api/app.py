@@ -15,18 +15,25 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
 from src.api.routes import router
+
+
+def error_json(error: str, detail: str) -> dict:
+    """Return a consistent error payload for API responses."""
+    return {"error": error, "detail": detail}
+
+
 from src.config.settings import settings
 
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -34,6 +41,7 @@ logger = logging.getLogger(__name__)
 VERSION = "0.1.0"
 try:
     import re
+
     pyproject_path = PROJECT_ROOT / "pyproject.toml"
     if pyproject_path.exists():
         with open(pyproject_path, "r", encoding="utf-8") as f:
@@ -49,15 +57,15 @@ except (FileNotFoundError, AttributeError):
 def validate_startup_configuration():
     """
     Validate configuration on application startup.
-    
+
     In production, this will fail fast with clear error messages.
     In local, this will log warnings but allow the app to start.
     """
     errors = settings.validate_production_config()
-    
+
     if errors:
         error_msg = "Configuration validation failed:\n  " + "\n  ".join(errors)
-        
+
         if settings.env == "prod":
             logger.critical(error_msg)
             raise RuntimeError(
@@ -68,16 +76,22 @@ def validate_startup_configuration():
             # In local, log warnings but don't fail
             for error in errors:
                 logger.warning(f"Configuration issue (non-fatal in local): {error}")
-    
+
     # Log startup summary (no secrets)
     logger.info("=" * 60)
     logger.info("AI Decision Traceability Engine - Startup Configuration")
     logger.info("=" * 60)
     logger.info(f"Environment: {settings.env}")
     logger.info(f"LLM Provider: {settings.llm_provider.value}")
-    logger.info(f"Model: {settings.openai_model if settings.openai_model else '(not set)'}")
-    logger.info(f"Base URL: {settings.openai_base_url if settings.openai_base_url else '(default for provider)'}")
-    logger.info(f"API Key: {'***configured***' if settings.openai_api_key and settings.openai_api_key.strip() else '(not set)'}")
+    logger.info(
+        f"Model: {settings.openai_model if settings.openai_model else '(not set)'}"
+    )
+    logger.info(
+        f"Base URL: {settings.openai_base_url if settings.openai_base_url else '(default for provider)'}"
+    )
+    logger.info(
+        f"API Key: {'***configured***' if settings.openai_api_key and settings.openai_api_key.strip() else '(not set)'}"
+    )
     logger.info(f"Log Level: {settings.log_level}")
     logger.info(f"Max Request Size: {settings.max_request_size} bytes")
     logger.info("=" * 60)
@@ -88,13 +102,13 @@ validate_startup_configuration()
 
 app = FastAPI(
     title="AI Decision Traceability Engine",
-    description="RESTful API for governed AI decision requests and audit queries"
+    description="RESTful API for governed AI decision requests and audit queries",
 )
 
 
 class RequestSizeGuardMiddleware(BaseHTTPMiddleware):
     """Middleware to reject requests that exceed the configured size limit."""
-    
+
     async def dispatch(self, request: Request, call_next):
         content_length = request.headers.get("content-length")
         if content_length:
@@ -105,13 +119,13 @@ class RequestSizeGuardMiddleware(BaseHTTPMiddleware):
                         status_code=413,
                         content={
                             "error": "Request entity too large",
-                            "detail": f"Request body size ({size} bytes) exceeds maximum allowed size ({settings.max_request_size} bytes)"
-                        }
+                            "detail": f"Request body size ({size} bytes) exceeds maximum allowed size ({settings.max_request_size} bytes)",
+                        },
                     )
             except ValueError:
                 # Invalid content-length header, let it pass (will fail later if needed)
                 pass
-        
+
         response = await call_next(request)
         return response
 
@@ -120,17 +134,43 @@ app.add_middleware(RequestSizeGuardMiddleware)
 app.include_router(router)
 
 
+@app.get("/", tags=["root"])
+async def root() -> Dict:
+    """
+    Root path: service info and links to main endpoints.
+    Use /health for health checks, /docs for interactive API docs.
+    """
+    return {
+        "service": "AI Decision Traceability Engine",
+        "docs": "/docs",
+        "health": "/health",
+        "decision_run": "POST /decision/run",
+        "decision_replay": "POST /decision/{run_id}/replay",
+    }
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch unhandled exceptions; log server-side, return generic 500 (no stacktrace in response)."""
+    if isinstance(exc, HTTPException):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    logger.exception("Unhandled exception: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content=error_json("Internal server error", "An unexpected error occurred."),
+    )
+
+
 @app.get("/health", tags=["health"])
 async def health_check() -> Dict:
     """
     Health check endpoint for monitoring and load balancers.
-    
+
     Returns:
         Dictionary with status, version, and current time
     """
     return {
         "status": "ok",
         "version": VERSION,
-        "time": datetime.utcnow().isoformat() + "Z"
+        "time": datetime.utcnow().isoformat() + "Z",
     }
-
