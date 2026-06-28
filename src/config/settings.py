@@ -82,6 +82,10 @@ class Settings(BaseSettings):
         default=1048576,  # 1MB
         description="Maximum request body size in bytes"
     )
+    policy_path: str = Field(
+        default="config/reference_policy.md",
+        description="Path to the policy text file used by the policy agent"
+    )
 
     @field_validator("llm_provider", mode="before")
     @classmethod
@@ -224,4 +228,3 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
-

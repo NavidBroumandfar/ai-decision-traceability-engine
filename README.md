@@ -1,108 +1,142 @@
-# AI Decision Traceability & Audit Engine
+# AI Decision Traceability Engine
+
+A public reference implementation for LLM-assisted decision traceability.
+
+This repository demonstrates a small governed decision flow where LLM agents
+produce structured intermediate outputs, deterministic Python rules make the
+final decision, and local trace artifacts make the run inspectable and replayable.
+
+It is intentionally scoped as a single-node prototype, not a standalone serious
+product or enterprise platform.
+
+## What It Shows
+
+- Three-agent LLM workflow: context extraction, policy interpretation, and
+  recommendation.
+- Deterministic final decision rules that operate on agent outputs.
+- Local JSON/JSONL persistence for decision results and trace events.
+- Replay support that re-runs a stored decision input and reports output diffs.
+- A public-safe sample policy at `config/reference_policy.md`.
+- Focused tests for deterministic logic and local persistence without live LLM
+  calls.
+
+## What It Does Not Claim
+
+- It does not guarantee globally deterministic decisions across LLM runs.
+- It does not provide authentication, authorization, tenant isolation, PII
+  redaction, encryption at rest, backups, queues, or high availability.
+- It does not provide an audit search API, dashboard, or commercial workflow.
+- It is not a compliance-certified system.
 
 ## Setup
 
-### Prerequisites
-
-- Python 3.10 or higher
-- pip
-
-### Environment Setup
-
-This project uses a local virtual environment to ensure reproducible execution across different Python installations.
-
-1. **Create the virtual environment:**
-   ```bash
-   python3 -m venv .venv
-   ```
-
-2. **Activate the virtual environment:**
-   ```bash
-   source .venv/bin/activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -e .
-   ```
-
-4. **Configure environment variables:**
-   
-   Create a `.env` file in the project root (a template has been created for you):
-   
-   **For Local Models (Ollama, LM Studio, etc.):**
-   ```bash
-   # Local Model Configuration
-   OPENAI_BASE_URL=http://localhost:11434/v1  # Ollama default
-   # OPENAI_BASE_URL=http://localhost:1234/v1  # LM Studio default
-   OPENAI_API_KEY=  # Leave empty for local models
-   OPENAI_MODEL=llama3.2  # Your local model name
-   
-   # Logging
-   LOG_LEVEL=INFO
-   ```
-   
-   **For OpenAI API:**
-   ```bash
-   # OpenAI API Configuration
-   OPENAI_BASE_URL=
-   OPENAI_API_KEY=sk-your-api-key-here
-   OPENAI_MODEL=gpt-4o-mini
-   
-   # Logging
-   LOG_LEVEL=INFO
-   ```
-   
-   **Local Model Setup:**
-   - **Ollama**: Install from [ollama.ai](https://ollama.ai), then run `ollama serve` and pull a model (e.g., `ollama pull llama3.2`)
-   - **LM Studio**: Install from [lmstudio.ai](https://lmstudio.ai), start the local server, and use port 1234
-   - The system uses OpenAI-compatible API, so any local server supporting that format will work
-
-### Running the Application
-
-**Streamlit Audit UI:**
 ```bash
+python3 -m venv .venv
 source .venv/bin/activate
-python -m streamlit run src/ui/app.py
+pip install -e .
+cp .env.example .env
 ```
 
-**FastAPI Server:**
-```bash
-source .venv/bin/activate
-python src/main.py
+### Local Provider Example
+
+```env
+ENV=local
+LLM_PROVIDER=ollama
+LLM_MODEL=llama3.2
+LLM_BASE_URL=http://localhost:11434/v1
+POLICY_PATH=config/reference_policy.md
+LOG_LEVEL=INFO
 ```
 
-Or using uvicorn directly:
+For LM Studio, use:
+
+```env
+LLM_PROVIDER=lmstudio
+LLM_MODEL=<local-model-name>
+LLM_BASE_URL=http://localhost:1234/v1
+```
+
+### OpenAI Example
+
+```env
+ENV=local
+LLM_PROVIDER=openai
+OPENAI_API_KEY=<OPENAI_API_KEY>
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_BASE_URL=
+POLICY_PATH=config/reference_policy.md
+```
+
+For local providers, `LLM_MODEL` and `LLM_BASE_URL` are preferred. The code still
+falls back to `OPENAI_MODEL` and `OPENAI_BASE_URL` for older local-provider
+configs, but new examples should use `LLM_*`.
+
+## Run
+
+FastAPI:
+
 ```bash
 source .venv/bin/activate
 uvicorn src.api.app:app
 ```
 
-**Note:** Always ensure the virtual environment is activated before running any commands.
+Streamlit:
 
-## Problem Statement
+```bash
+source .venv/bin/activate
+python -m streamlit run src/ui/app.py
+```
 
-Modern AI systems, particularly agentic AI applications, make decisions that impact business outcomes, regulatory compliance, and user trust. However, these systems often operate as "black boxes" with limited visibility into how decisions are made, what factors influenced them, and whether they align with organizational policies and constraints. This lack of traceability creates significant risks in enterprise environments where decisions must be auditable, explainable, and governed.
+## Replay
 
-The AI Decision Traceability & Audit Engine addresses this critical gap by providing a governed, agentic AI decision system with full traceability and auditability. This system enables organizations to track every decision made by AI agents, understand the reasoning behind those decisions, enforce deterministic orchestration and guardrails, and maintain comprehensive audit logs for compliance and governance purposes.
+Replay requires both:
 
-**Important Clarifications:**
-- This is **NOT** a chatbot. This system focuses on structured decision-making with full traceability.
-- This is **NOT** autonomous AI. All decisions are made within a governed framework with explicit orchestration and guardrails.
-- The primary focus is on **decision traceability, governance, and auditability** for enterprise AI applications.
+- `data/decisions/{run_id}.json`
+- `data/traces/{run_id}.jsonl`
 
-## Production Contract
+API and Streamlit-created decisions are persisted to both stores. Replay creates
+a new trace and decision result under a new `replay_run_id`, then returns a diff
+report:
 
-This system is production-credible but not enterprise-grade. It provides deterministic orchestration, full traceability, and persistent storage suitable for single-node deployments. It does not provide distributed coordination, high availability, automatic failover, or multi-tenant isolation. For detailed guarantees, limitations, and operational assumptions, see [PRODUCTION_CONTRACT.md](PRODUCTION_CONTRACT.md).
+```bash
+curl -X POST http://127.0.0.1:8000/decision/<RUN_ID>/replay
+```
 
-**Key Points:**
-- Deterministic rule evaluation and confidence calculation
-- Atomic persistence of decision results and trace events
-- Single-node deployment assumption
-- LLM agent outputs are non-deterministic (even with temperature=0)
-- No automatic backups or replication
+The deterministic rules are stable for identical agent outputs. The LLM agent
+outputs themselves may vary between original and replay runs.
 
-## Project Phases (Tracked in ProjectVision.ts)
+## Tests
 
-Project phases and progress are tracked in `src/vision/ProjectVision.ts`. This file serves as the single source of truth for project status and roadmap.
+Default tests do not call a live LLM:
 
+```bash
+.venv/bin/python -m unittest discover -s tests -v
+```
+
+Syntax/import check:
+
+```bash
+.venv/bin/python -m compileall -q src scripts tests
+```
+
+Optional live replay smoke test:
+
+```bash
+.venv/bin/python scripts/smoke_p8_replay.py
+```
+
+The smoke test requires a configured provider and running LLM endpoint.
+
+## Local Artifacts And Privacy
+
+Decision results, trace files, SQLite databases, `.env`, and virtual
+environments are ignored by git. The trace writer stores full request and agent
+payloads without redaction, so do not submit secrets, private customer data, or
+regulated data to this reference implementation.
+
+## Project Status
+
+The useful reference ideas are the decision trace model, deterministic final
+authority boundary, replay diff helpers, and small policy-loading path. Future
+serious product work should happen in a product/evaluation repo rather than
+expanding this repository into a SaaS surface.

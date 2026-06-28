@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 from src.core.decision_models import DecisionResult
+from src.persistence.artifact_paths import artifact_path
 
 
 class FileDecisionStore:
@@ -43,7 +44,7 @@ class FileDecisionStore:
             OSError: If the file cannot be written
             ValueError: If the result cannot be serialized
         """
-        file_path = self.base_dir / f"{result.run_id}.json"
+        file_path = artifact_path(self.base_dir, result.run_id, ".json")
         
         # Serialize to JSON
         data = result.model_dump(mode="json")
@@ -74,7 +75,10 @@ class FileDecisionStore:
         Returns:
             DecisionResult if found, None otherwise
         """
-        file_path = self.base_dir / f"{run_id}.json"
+        try:
+            file_path = artifact_path(self.base_dir, run_id, ".json")
+        except ValueError:
+            return None
         
         if not file_path.exists():
             return None
@@ -97,7 +101,10 @@ class FileDecisionStore:
         Returns:
             True if the decision result exists, False otherwise
         """
-        file_path = self.base_dir / f"{run_id}.json"
+        try:
+            file_path = artifact_path(self.base_dir, run_id, ".json")
+        except ValueError:
+            return False
         return file_path.exists()
 
 

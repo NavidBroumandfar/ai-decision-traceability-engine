@@ -1,6 +1,7 @@
-# Health Check and Production Configuration
+# Health Check And Local Operational Notes
 
-This document describes the health check endpoint and production configuration recommendations for the AI Decision Traceability Engine API.
+This document describes the health check endpoint and local operational notes for
+the AI Decision Traceability Engine API reference implementation.
 
 ## Health Check Endpoint
 
@@ -21,11 +22,8 @@ The API provides a `/health` endpoint for monitoring and load balancer health ch
 
 ### Usage
 
-The health endpoint can be used by:
-- Load balancers for health checks
-- Monitoring systems (e.g., Prometheus, Datadog)
-- Container orchestration systems (e.g., Kubernetes liveness/readiness probes)
-- CI/CD pipelines for deployment verification
+The health endpoint can be used by local smoke checks, lightweight monitoring,
+or deployment experiments.
 
 ## Request Size Limits
 
@@ -48,7 +46,8 @@ The API enforces a configurable maximum request body size to protect against ove
 
 ## Uvicorn Timeout Configuration
 
-When running the API with Uvicorn, configure appropriate timeouts for production use:
+When running the API with Uvicorn, these settings are useful for experiments
+that need bounded local behavior:
 
 ### Recommended Settings
 
@@ -69,20 +68,23 @@ uvicorn src.api.app:app \
 - **`--limit-concurrency`**: Maximum number of concurrent connections. Adjust based on your server capacity.
 - **`--limit-max-requests`**: Maximum number of requests before restarting workers (useful for memory leak prevention).
 
-### Production Considerations
+### Deployment Experiment Considerations
 
-1. **Worker Processes**: Use multiple workers for better concurrency:
+1. **Worker Processes**: Multiple workers may improve concurrency, but this
+   reference implementation has local file persistence and no distributed
+   locking:
    ```bash
    uvicorn src.api.app:app --workers 4
    ```
 
-2. **Reverse Proxy**: Deploy behind a reverse proxy (nginx, Traefik) for:
+2. **Reverse Proxy**: A reverse proxy can provide controls this repo does not
+   implement:
    - SSL/TLS termination
    - Additional rate limiting
    - Request buffering
    - Static file serving
 
-3. **Monitoring**: Configure health check monitoring with appropriate intervals:
+3. **Monitoring**: Configure health checks with appropriate intervals:
    - Liveness probe: Every 10-30 seconds
    - Readiness probe: Every 5-10 seconds
 

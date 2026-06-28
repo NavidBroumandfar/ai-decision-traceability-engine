@@ -1,77 +1,57 @@
-# LLM Server Setup Guide
+# LLM Setup
 
-## Quick Fix: Start Your LLM Server
+The agents use an OpenAI-compatible chat completions client. Pick one provider
+in `.env`.
 
-Your application is configured to use a local LLM server (Ollama) but the server is not running.
+## Ollama
 
-### Option 1: Use Ollama (Recommended for Local Development)
+```env
+ENV=local
+LLM_PROVIDER=ollama
+LLM_MODEL=llama3.2
+LLM_BASE_URL=http://localhost:11434/v1
+OPENAI_API_KEY=
+POLICY_PATH=config/reference_policy.md
+```
 
-1. **Install Ollama:**
-   - Download from: https://ollama.ai
-   - Install the Windows version
-   - Ollama will be added to your PATH automatically
+Run:
 
-2. **Start Ollama Server:**
-   - Open a new terminal/PowerShell window
-   - Run: `ollama serve`
-   - Keep this terminal open while using the application
+```bash
+ollama serve
+ollama pull llama3.2
+```
 
-3. **Pull the Required Model:**
-   - In another terminal, run: `ollama pull qwen2.5-coder:7b-instruct`
-   - Wait for the download to complete
+## LM Studio
 
-4. **Verify Ollama is Running:**
-   - Open a browser and go to: http://localhost:11434
-   - You should see Ollama's API documentation
+```env
+ENV=local
+LLM_PROVIDER=lmstudio
+LLM_MODEL=<local-model-name>
+LLM_BASE_URL=http://localhost:1234/v1
+OPENAI_API_KEY=
+POLICY_PATH=config/reference_policy.md
+```
 
-5. **Restart Your Streamlit App:**
-   - Stop the current Streamlit app (Ctrl+C)
-   - Run: `python -m streamlit run src/ui/app.py`
-   - The connection error should be resolved
+Start the LM Studio local server before running the API or UI.
 
-### Option 2: Use OpenAI API
+## OpenAI
 
-If you prefer to use OpenAI's cloud API instead:
-
-1. **Get an OpenAI API Key:**
-   - Sign up at: https://platform.openai.com
-   - Create an API key in your account settings
-
-2. **Update your `.env` file:**
-   ```env
-   OPENAI_BASE_URL=
-   OPENAI_API_KEY=sk-your-api-key-here
-   OPENAI_MODEL=gpt-4o-mini
-   LOG_LEVEL=INFO
-   ```
-
-3. **Restart Your Streamlit App:**
-   - Stop the current Streamlit app (Ctrl+C)
-   - Run: `python -m streamlit run src/ui/app.py`
-
-### Option 3: Use LM Studio
-
-1. **Install LM Studio:**
-   - Download from: https://lmstudio.ai
-   - Install and launch the application
-
-2. **Start Local Server:**
-   - In LM Studio, go to the "Local Server" tab
-   - Click "Start Server"
-   - Note the port (usually 1234)
-
-3. **Update your `.env` file:**
-   ```env
-   OPENAI_BASE_URL=http://localhost:1234/v1
-   OPENAI_API_KEY=
-   OPENAI_MODEL=your-model-name
-   LOG_LEVEL=INFO
-   ```
-
-4. **Restart Your Streamlit App**
+```env
+ENV=local
+LLM_PROVIDER=openai
+OPENAI_API_KEY=<OPENAI_API_KEY>
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_BASE_URL=
+POLICY_PATH=config/reference_policy.md
+```
 
 ## Troubleshooting
 
-- **Connection Refused Error:** The LLM server is not running. Start it using one of the options above.
-- **Model Not Found:** Make sure you've pulled/downloaded the model specified in your `.env` file.
-- **Port Already in Use:** Another application might be using the port. Change the port in your `.env` file or stop the conflicting application.
+- `LLM_MODEL is required`: set `LLM_MODEL` for `ollama`/`lmstudio`, or
+  `OPENAI_MODEL` for `openai`.
+- `LLM_BASE_URL is required`: set the local provider URL or rely on the provider
+  default.
+- Connection refused: start the local provider server.
+- Model not found: pull or load the configured model.
+- OpenAI authentication failure: check that `OPENAI_API_KEY` is set in the
+  environment and not committed to git.

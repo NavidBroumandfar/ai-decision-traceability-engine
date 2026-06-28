@@ -8,6 +8,8 @@ in an append-only manner, ensuring full auditability.
 import json
 from pathlib import Path
 
+from src.persistence.artifact_paths import artifact_path
+
 from .trace_models import TraceEvent
 
 
@@ -29,7 +31,7 @@ def write_trace_event(event: TraceEvent) -> None:
     traces_dir = Path("data/traces")
     traces_dir.mkdir(parents=True, exist_ok=True)
     
-    trace_file = traces_dir / f"{event.run_id}.jsonl"
+    trace_file = artifact_path(traces_dir, event.run_id, ".jsonl")
     
     # Serialize the event to JSON (Pydantic handles datetime conversion)
     event_dict = event.model_dump(mode="json")
@@ -39,4 +41,3 @@ def write_trace_event(event: TraceEvent) -> None:
         json_line = json.dumps(event_dict, ensure_ascii=False)
         f.write(json_line + "\n")
         f.flush()  # Ensure immediate write to disk
-

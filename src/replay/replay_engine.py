@@ -7,7 +7,7 @@ inputs and produce structured diff reports comparing original vs replayed result
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from src.core.decision_models import DecisionRequest, DecisionResult
 from src.orchestration.orchestrator import DecisionOrchestrator
+from src.persistence.artifact_paths import artifact_path
 from src.persistence.decision_store import FileDecisionStore
 from src.tracing.trace_models import TraceEvent
 
@@ -56,7 +57,7 @@ def load_trace_events(run_id: str) -> list[TraceEvent]:
         FileNotFoundError: If trace file does not exist
         ValueError: If trace file is malformed
     """
-    trace_file = Path("data/traces") / f"{run_id}.jsonl"
+    trace_file = artifact_path(Path("data/traces"), run_id, ".jsonl")
     
     if not trace_file.exists():
         raise FileNotFoundError(
@@ -86,7 +87,7 @@ def load_trace_events(run_id: str) -> list[TraceEvent]:
             f"Action: Check file permissions and disk space."
         ) from e
     
-    return events
+    return sorted(events, key=lambda event: event.timestamp)
 
 
 def extract_input_event(events: list[TraceEvent]) -> TraceEvent:
@@ -213,7 +214,7 @@ def replay_decision(orchestrator: DecisionOrchestrator, run_id: str) -> ReplayRe
     # Create DecisionRequest from extracted input
     replay_request = DecisionRequest(
         request_id=request_id,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         input_payload=input_payload,
         metadata=metadata
     )
@@ -221,6 +222,7 @@ def replay_decision(orchestrator: DecisionOrchestrator, run_id: str) -> ReplayRe
     # Re-run orchestrator with run_id override
     try:
         replay_result = orchestrator.run_decision(replay_request, run_id_override=replay_run_id)
+        decision_store.save(replay_result)
     except Exception as e:
         raise RuntimeError(
             f"Replay execution failed for run_id {run_id}: {e}. "

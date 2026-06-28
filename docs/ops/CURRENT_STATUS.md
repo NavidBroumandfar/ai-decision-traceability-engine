@@ -1,43 +1,39 @@
 # Current Status
 
-- Last updated: 2026-06-25
-- Status: paused
-- Builder-ops source: `/Users/navidbr/Projects/builder-ops/projects/paused/ai-decision-traceability-engine.md`
+- Last updated: 2026-06-28
+- Status: polished public reference implementation
 - GitHub repo: `https://github.com/NavidBroumandfar/ai-decision-traceability-engine.git`
 
 ## Current Objective
 
-Prototype governed AI decision traceability and auditability.
+Keep this repository as a sanitized, coherent reference implementation for LLM
+decision traceability.
 
-## Current Phase Or Milestone
+## Current Positioning
 
-Paused after provider-safe LLM client work.
+This is not a standalone product. It preserves the useful traceability ideas:
 
-## Latest Relevant Branch/Commit
+- structured LLM agent outputs,
+- deterministic final decision authority,
+- local trace and decision persistence,
+- replay diff reporting,
+- public-safe policy loading.
 
-- Branch: `main`
-- Commit: `f936b95 2026-01-27 feat(phase-P7.5): P7.5-4 env example + provider-safe LLM client`
+## Latest Direction
 
-## Recent Progress
+- Keep docs and code modest: reference implementation / single-node prototype.
+- Do not add SaaS workflows, dashboards, broad provider integrations, or
+  commercial governance layers.
+- Carry product or evaluation ideas into Agent Behavior Evals Lab / Agent Evals
+  Pro only when they are validated there.
 
-- Latest audited commit added provider-safe LLM client and env example work.
-- Repository includes audit database, docs, source, and production contract notes.
+## Local Artifacts
 
-## Current Blocker
-
-Decide whether this overlaps with Agent Behavior Evals Lab or Agent Evals Pro.
+Generated decisions, traces, SQLite databases, `.env`, virtual environments, and
+build artifacts are ignored. Do not commit private payloads, trace data, API
+keys, or local audit databases.
 
 ## Next Action
 
-Compare this concept against active agent-evals work.
-
-## Guardrails
-
-- Do not build additional provider integrations or dashboards.
-- Avoid duplicating active agent evaluation and governance work.
-- Preserve only unique traceability ideas.
-
-## Review Note
-
-Review should ask whether this is a separate project or a concept library for active agent-evals work.
-
+If maintaining this repo, limit work to tests, docs, sanitization, and small
+traceability examples. Otherwise archive it as a polished public reference.

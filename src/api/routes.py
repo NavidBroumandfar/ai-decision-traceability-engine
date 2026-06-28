@@ -12,6 +12,7 @@ from typing import Dict
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
+from src.config.policy import load_policy_text
 from src.core.decision_models import DecisionRequest, DecisionResult
 from src.orchestration.orchestrator import DecisionOrchestrator
 from src.persistence.decision_store import FileDecisionStore
@@ -25,8 +26,7 @@ router = APIRouter(prefix="/decision", tags=["decision"])
 _decision_store = FileDecisionStore()
 
 # Initialize orchestrator with default policy text
-# In a production system, this would come from configuration
-_orchestrator = DecisionOrchestrator(policy_text="")
+_orchestrator = DecisionOrchestrator(policy_text=load_policy_text())
 
 
 @router.post("/run", response_model=DecisionResult)

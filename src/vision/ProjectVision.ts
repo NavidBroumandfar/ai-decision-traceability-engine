@@ -79,28 +79,33 @@ export const ProjectVision = {
       order: 8,
       title: "Decision Replay Engine",
       description: "Ability to replay a past decision using stored inputs and trace data",
-      status: "planned"
+      deliverables: [
+        "src/replay/replay_engine.py",
+        "docs/api/REPLAY_ENDPOINT.md",
+        "scripts/smoke_p8_replay.py"
+      ],
+      status: "completed"
     },
     {
       id: "P9",
       order: 9,
       title: "Audit Query API Surface",
       description: "Read-only FastAPI endpoints for querying decisions and audit trails",
-      status: "planned"
+      status: "deferred-reference-scope"
     },
     {
       id: "P10",
       order: 10,
       title: "Governance README & Architecture Diagrams",
       description: "High-level governance documentation and system architecture diagrams",
-      status: "planned"
+      status: "deferred-reference-scope"
     },
     {
       id: "P11",
       order: 11,
       title: "Hardening & Evaluation Hooks",
       description: "Evaluation points, metrics hooks, and non-functional hardening",
-      status: "planned"
+      status: "deferred-to-eval-product-repos"
     }
   ]
 };

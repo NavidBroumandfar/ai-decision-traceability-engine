@@ -76,7 +76,7 @@ Trace events captured:
 
 AUDIT CONCLUSION
 ----------------
-This decision was processed through a governed workflow with full traceability.
+This decision was processed through a governed workflow with a local trace log.
 The final decision of {final_decision} was determined by deterministic rule
 evaluation operating on AI agent outputs. All execution steps are recorded in
 the trace log for review.
@@ -205,7 +205,7 @@ Trace events captured:
 
 AUDIT CONCLUSION
 ----------------
-This decision was processed through a governed workflow with full traceability.
+This decision was processed through a governed workflow with a local trace log.
 The final decision of review was determined by deterministic rule evaluation
 operating on AI agent outputs. All execution steps are recorded in the trace
 log for review.
@@ -223,7 +223,7 @@ log for review.
 ## Key Audit Points
 
 ### For Auditors
-- **Traceability**: Every decision has a complete trace log
+- **Traceability**: Every persisted decision has a local trace log
 - **Deterministic Rules**: Final decisions are made by explicit, auditable rules
 - **Agent Outputs**: All AI reasoning is captured in structured outputs
 - **Confidence Calculation**: Confidence scores are computed using a transparent formula
@@ -246,4 +246,3 @@ log for review.
 - Actual implementation should parse trace events programmatically
 - Narrative generation is not currently implemented in the system (planned for future phases)
 - Trace files must be read from disk to generate narratives
-

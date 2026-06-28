@@ -30,6 +30,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.config.policy import load_policy_text
 from src.core.decision_models import DecisionRequest
 from src.orchestration.orchestrator import DecisionOrchestrator
 from src.persistence.decision_store import FileDecisionStore
@@ -42,8 +43,8 @@ def main():
     print("P8-1 Replay Engine Smoke Test")
     print("=" * 60)
 
-    # Initialize orchestrator with empty policy (for smoke test)
-    orchestrator = DecisionOrchestrator(policy_text="")
+    # Initialize orchestrator with the public-safe sample policy.
+    orchestrator = DecisionOrchestrator(policy_text=load_policy_text())
     decision_store = FileDecisionStore()
 
     # Step 1: Run a decision

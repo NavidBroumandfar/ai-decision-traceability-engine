@@ -83,12 +83,9 @@ def validate_startup_configuration():
     logger.info("=" * 60)
     logger.info(f"Environment: {settings.env}")
     logger.info(f"LLM Provider: {settings.llm_provider.value}")
-    logger.info(
-        f"Model: {settings.openai_model if settings.openai_model else '(not set)'}"
-    )
-    logger.info(
-        f"Base URL: {settings.openai_base_url if settings.openai_base_url else '(default for provider)'}"
-    )
+    logger.info(f"Model: {settings.get_effective_model() or '(not set)'}")
+    logger.info(f"Base URL: {settings.get_effective_base_url() or '(default for provider)'}")
+    logger.info(f"Policy Path: {settings.policy_path}")
     logger.info(
         f"API Key: {'***configured***' if settings.openai_api_key and settings.openai_api_key.strip() else '(not set)'}"
     )
@@ -102,7 +99,7 @@ validate_startup_configuration()
 
 app = FastAPI(
     title="AI Decision Traceability Engine",
-    description="RESTful API for governed AI decision requests and audit queries",
+    description="Reference API for governed LLM decision traceability",
 )
 
 

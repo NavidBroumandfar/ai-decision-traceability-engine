@@ -19,8 +19,11 @@ from typing import Any
 
 import streamlit as st
 
+from src.config.policy import load_policy_text
 from src.core.decision_models import DecisionRequest, DecisionResult
 from src.orchestration.orchestrator import DecisionOrchestrator
+from src.persistence.artifact_paths import artifact_path
+from src.persistence.decision_store import FileDecisionStore
 from src.tracing.trace_models import TraceEvent
 from src.ui.components import render_decision_result, render_trace_event
 
@@ -35,7 +38,11 @@ def load_trace_events(run_id: str) -> list[TraceEvent]:
     Returns:
         List of TraceEvent objects, sorted by timestamp
     """
-    trace_file = Path("data/traces") / f"{run_id}.jsonl"
+    try:
+        trace_file = artifact_path(Path("data/traces"), run_id, ".jsonl")
+    except ValueError as e:
+        st.warning(f"Invalid run_id: {e}")
+        return []
     
     if not trace_file.exists():
         return []
@@ -62,9 +69,9 @@ def load_trace_events(run_id: str) -> list[TraceEvent]:
     return events
 
 
-# Initialize orchestrator with empty policy text
-# In production, this would come from configuration
-_orchestrator = DecisionOrchestrator(policy_text="")
+# Initialize shared decision components
+_orchestrator = DecisionOrchestrator(policy_text=load_policy_text())
+_decision_store = FileDecisionStore()
 
 
 # ============================================================================
@@ -148,6 +155,7 @@ if run_button:
             # Run decision
             with st.spinner("Processing decision..."):
                 result: DecisionResult = _orchestrator.run_decision(request)
+                _decision_store.save(result)
             
             # Display result
             render_decision_result(result)
@@ -209,4 +217,3 @@ if run_id_input:
         st.write("Trace events are written to: `data/traces/{run_id}.jsonl`")
 else:
     st.info("Enter a run_id above to view trace events, or run a decision to automatically load traces.")
-

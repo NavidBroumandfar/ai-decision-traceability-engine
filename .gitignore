@@ -46,8 +46,15 @@ Thumbs.db
 # Data
 data/*
 !data/.gitkeep
+data/traces/
+data/decisions/
+
+# Local audit/database artifacts
+audit_log.db
+*.sqlite
+*.sqlite3
+*.db
 
 # Logs
 *.log
 logs/
-
